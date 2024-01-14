@@ -1,0 +1,48 @@
+services:
+
+  db:
+    image: mongo:3.5
+    container_name: mongodb
+    env_file:
+      - src/main/resources/.env
+      - ./.env
+    restart: on-failure
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb:/data/db
+
+  backend:
+    container_name: spring-boot
+    restart: on-failure
+    ports:
+      - 8080:8080
+    env_file:
+      - src/main/resources/.env
+      - ./.env
+    build:
+      context: .
+      dockerfile: docker/java/Dockerfile
+    depends_on:
+        - db
+
+  frontend:
+    container_name: ui
+    ports:
+      - 3000:3000
+    build:
+      context: .
+      dockerfile: docker/ui/Dockerfile
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  mongodb:
